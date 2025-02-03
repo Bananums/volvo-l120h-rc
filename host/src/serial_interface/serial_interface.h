@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 #include <termios.h>
+#include "../structs.h" //TODO resolve to using project path instead of relative ../
 
 // Checks if the given baud_rate matches one of the known baud rate constants.
 bool IsValidBaudRate(speed_t baud_rate);
@@ -27,5 +28,7 @@ void WaitForAllSerialTransmitted(int file_descriptor);
 
 // Closes the serial port.
 ssize_t WriteSerialData(int file_descriptor, const char *buffer);
+
+ssize_t WriteSerialCommand(int file_descriptor, const CommandPayload &command_payload);
 
 #endif //SERIAL_INTERFACE_H

@@ -94,3 +94,10 @@ ssize_t WriteSerialData(const int file_descriptor, const char *buffer) {
     const ssize_t bytes_written = write(file_descriptor, buffer, strlen(buffer));
     return bytes_written;
 }
+
+ssize_t WriteSerialCommand(int file_descriptor, const CommandPayload &command_payload) {
+    assert(file_descriptor >= 0 && "file_descriptor must be valid (>= 0)!");
+
+    const ssize_t bytes_written = write(file_descriptor, &command_payload, sizeof(command_payload));
+    return bytes_written;
+}
