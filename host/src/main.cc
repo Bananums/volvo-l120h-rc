@@ -3,22 +3,25 @@
 #include <iostream>
 #include <cerrno>
 #include <cstring>
+#include <memory>
 
 #include "serial_interface/serial_interface.h"
 #include "structs.h"
 
 int main() {
-    //const char *uart_port_name = "/dev/ttyUSB1";
-    const char *uart_port_name = "/dev/pts/2";
+    const char *uart_port_name = "/dev/ttyUSB1";
+    //const char *uart_port_name = "/dev/pts/2";
 
-    CommandPayload test_command {
-    .heartbeat = 97,
-    .function_request = 43,
-    .steering = -0.2345,
-    .throttle = 1.23,
-    .tilt = 12.452,
-    .lift = -1234.235,
+    CommandPayload test_command{
+        .heartbeat = 97,
+        .function_request = 43,
+        .steering = -0.2345,
+        .throttle = 1.23,
+        .tilt = 12.452,
+        .lift = -1234.235,
     };
+
+    std::cout << "Command size: " << sizeof(CommandPayload) << std::endl;
 
     int serial_port;
     if (!OpenSerialPort(uart_port_name, serial_port)) {
@@ -31,15 +34,52 @@ int main() {
         CloseSerialPort(serial_port);
     }
 
-    const char *data = "Hello World!\n";
+    //const char *data = "Hello World!\n";
 
-    ssize_t bytes_written = WriteSerialData(serial_port, data);
+    //ssize_t bytes_written = WriteSerialData(serial_port, data);
+    //if (bytes_written < 0) {
+    //    std::cerr << "Failed to write to serial port " << uart_port_name << ": " << strerror(errno) << std::endl;
+    //    return 1;
+    //}
+
+    HeartbeatPayload heartbeat_payload;
+    heartbeat_payload.heartbeat = 7;
+    //drive_payload.steering = 12.45;
+    //drive_payload.throttle = 1.23;
+
+    NannersFrame send_frame;
+    send_frame.start_frame = kStartOfFrame;
+    send_frame.frame_id = 1002;
+    send_frame.crc = 2;
+
+    if (sizeof(DrivePayload) > kMaxPayloadSize) {
+        //TODO handle error
+    }
+
+    memset(send_frame.payload, 0, kMaxPayloadSize);
+    memcpy(send_frame.payload, &heartbeat_payload, sizeof(HeartbeatPayload));
+    std::cout << "Length: " << +kMaxPayloadSize << std::endl;
+    send_frame.length = kMaxPayloadSize;
+    send_frame.end_frame = kEndOfFrame;
+
+    ssize_t bytes_written = WriteNannersCommand(serial_port, send_frame);
     if (bytes_written < 0) {
         std::cerr << "Failed to write to serial port " << uart_port_name << ": " << strerror(errno) << std::endl;
         return 1;
     }
 
-    bytes_written = WriteSerialCommand(serial_port, test_command);
+
+    DrivePayload drive_payload;
+    drive_payload.heartbeat = 9;
+    drive_payload.steering = 12.45;
+    drive_payload.throttle = 1.23;
+    send_frame.frame_id = 1004;
+    send_frame.crc = 123;
+
+    memset(send_frame.payload, 0, kMaxPayloadSize);
+    memcpy(send_frame.payload, &drive_payload, sizeof(DrivePayload));
+
+    bytes_written = WriteNannersCommand(serial_port, send_frame);
     if (bytes_written < 0) {
         std::cerr << "Failed to write to serial port " << uart_port_name << ": " << strerror(errno) << std::endl;
         return 1;

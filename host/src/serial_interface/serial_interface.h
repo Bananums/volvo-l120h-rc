@@ -31,4 +31,6 @@ ssize_t WriteSerialData(int file_descriptor, const char *buffer);
 
 ssize_t WriteSerialCommand(int file_descriptor, const CommandPayload &command_payload);
 
+ssize_t WriteNannersCommand(int file_descriptor, const NannersFrame &frame);
+
 #endif //SERIAL_INTERFACE_H

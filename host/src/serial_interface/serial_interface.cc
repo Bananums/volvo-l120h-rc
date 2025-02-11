@@ -101,3 +101,10 @@ ssize_t WriteSerialCommand(int file_descriptor, const CommandPayload &command_pa
     const ssize_t bytes_written = write(file_descriptor, &command_payload, sizeof(command_payload));
     return bytes_written;
 }
+
+ssize_t WriteNannersCommand(int file_descriptor, const NannersFrame &frame) {
+    assert(file_descriptor >= 0 && "file_descriptor must be valid (>= 0)!");
+
+    const ssize_t bytes_written = write(file_descriptor, &frame, sizeof(frame));
+    return bytes_written;
+}
