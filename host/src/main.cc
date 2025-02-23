@@ -4,11 +4,25 @@
 #include <cerrno>
 #include <cstring>
 #include <memory>
+#include <csignal>
+#include <atomic>
+#include <chrono>
+#include <thread>
 
 #include "serial_interface/serial_interface.h"
 #include "structs.h"
 
+std::atomic<bool> stop_flag(false);
+
+void signalHandler(int signum) {
+    std::cout << "\nInterrupt signal (" << signum << ") received.\n";
+    stop_flag = true;
+}
+
 int main() {
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
+
     const char *uart_port_name = "/dev/ttyUSB1";
     //const char *uart_port_name = "/dev/pts/2";
 
@@ -86,6 +100,16 @@ int main() {
     }
 
     std::cout << "Successfully wrote: " << bytes_written << " bytes to: " << uart_port_name << std::endl;
+
+    ssize_t bytes_received = 0;
+    char byte = 0;
+    while (!stop_flag) {
+        bytes_received = ReadSerialData(serial_port, &byte, sizeof(byte));
+        if (bytes_received > 0) {
+            std::cout << "Received: " << +static_cast<uint8_t>(byte) << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
     WaitForAllSerialTransmitted(serial_port);
 
